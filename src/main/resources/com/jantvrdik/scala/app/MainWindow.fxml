@@ -36,7 +36,7 @@
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS" />
         </rowConstraints>
          <children>
-            <Canvas height="810.0" onMouseClicked="#handleCanvasClick" style="-fx-fill: red;" width="1283.0" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" fx:id="xcanvas" />
+            <Canvas height="810.0" width="1283.0" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" fx:id="xcanvas" />
             <Button mnemonicParsing="false" onAction="#xhandleClick" text="Button" fx:id="xbutton" />
          </children>
       </GridPane>
