@@ -40,7 +40,7 @@ class MainWindowController(private val xbutton: Button, private val xcanvas: Can
       model.select(pos)
     }
 
-    canvas.drawGrids(0, 0, settings.dim)
+    canvas.draw()
   }
 
 

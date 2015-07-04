@@ -3,10 +3,10 @@ package com.jantvrdik.scala.app
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scalafx.Includes._
 import scalafx.scene.canvas.Canvas
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.paint.Color
-import scalafx.Includes._
 
 class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
 
@@ -15,13 +15,25 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
   private val context = canvas.graphicsContext2D
 
   canvas.onMouseClicked = (event: MouseEvent) => {
-    val gridPos = canvasPosToGridPos(event.getX, event.getY)
-    val gamePos = gridPosToGamePos(gridPos._1, gridPos._2)
-    onClick(gamePos)
+    val x = (event.getX / size).asInstanceOf[Int]
+    val y = (event.getY / size).asInstanceOf[Int]
+    onClick(toGamePos(x, y))
   }
 
+  def draw() = {
+    drawGrids(0, 0, settings.dim)
+  }
 
-  def drawGrids(top: Double, left: Double, dim: Vector[Int]): (Double, Double) = {
+  def drawMark(pos: Vector[Int], color: Color) = {
+    val (x, y) = toGridPos(pos)
+    val markSize = size / 2
+    val shift = size / 2 - markSize / 2
+
+    context.setFill(color)
+    context.fillOval(x * size + shift, y * size + shift, markSize, markSize)
+  }
+
+  private def drawGrids(top: Double, left: Double, dim: Vector[Int]): (Double, Double) = {
     if (dim.length == 2) {
       drawGrid(top, left, dim(0), dim(1), size)
 
@@ -48,7 +60,7 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
     }
   }
 
-  def drawGrid(top: Double, left: Double, width: Int, height: Int, size: Double) = {
+  private def drawGrid(top: Double, left: Double, width: Int, height: Int, size: Double) = {
     val gc = canvas.getGraphicsContext2D
 
     for (i <- 0 to width) {
@@ -62,24 +74,10 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
     (width * size, height * size)
   }
 
-  def drawMark(pos: Vector[Int], color: Color) = {
-    val (x, y) = gamePosCanvasPos(pos)
-    val markSize = size / 2
-    val shift = size / 2 - markSize / 2
-
-    context.setFill(color)
-    context.fillOval(x + shift, y + shift, markSize, markSize)
-  }
-
-  def gamePosCanvasPos(pos: Vector[Int]): (Double, Double) = {
-    val (x, y) = toGridPos(pos)
-    (x * size, y * size)
-  }
-
-  def toGridPos(pos: Vector[Int]): (Int, Int) = {
-
+  private def toGridPos(pos: Vector[Int]): (Int, Int) = {
     var (x, y) = (1, 1)
     var (xx, yy) = (1, 1)
+
     for (i <- 0 until settings.dim.length) {
       if (i % 2 == 0) {
         x += pos(i) * xx
@@ -93,7 +91,7 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
     (x, y)
   }
 
-  def gridPosToGamePos(x: Int, y: Int): Vector[Int] = {
+  private def toGamePos(x: Int, y: Int): Vector[Int] = {
 
     val pos = ArrayBuffer[Int]()
     val xx = mutable.Stack[Int](1)
@@ -127,10 +125,6 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
     }
 
     pos.toVector.reverse
-  }
-
-  def canvasPosToGridPos(x: Double, y: Double): (Int, Int) = {
-    ((x / size).asInstanceOf[Int], (y / size).asInstanceOf[Int])
   }
 
 }
