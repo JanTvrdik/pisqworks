@@ -12,39 +12,35 @@ import scalafxml.core.macros.sfxml
 class MainWindowController(private val xbutton: Button, private val xcanvas: Canvas) {
 
   val size = 20.0
-  val dim = Vector(5, 5, 5, 5)
-  val winLength = 3
-
-  val playersCount = 2
-  val playersColors = mutable.ArraySeq(Color.Red, Color.Blue, Color.Green)
-  var currentPlayer = 0
-
-  var gameplan = ArrayBuffer[Int]()
+  var settings: GameSettings = null
+  var model: GameModel = null
 
 
   def handleCanvasClick(event: javafx.scene.input.MouseEvent) = {
     val gridPos = canvasPosToGridPos(event.getX, event.getY)
     val gamePos = gridPosToGamePos(gridPos._1, gridPos._2)
 
-    if (isGamePosValid(gamePos) && getMark(gamePos) < 0) {
-      setMark(gamePos, currentPlayer)
-      drawMark(gamePos, playersColors(currentPlayer))
-      checkVictory(gamePos)
-      currentPlayer = (currentPlayer + 1) % playersCount
-    }
+    model.select(gamePos)
   }
 
   def xhandleClick(event: ActionEvent) = {
-    val source = event.getSource
-    xbutton.text = "blbost"
+    xbutton.text = "clicked!"
 
-    val gc = xcanvas.getGraphicsContext2D
-    gc.setLineWidth(1)
+    val players = Vector(Player(Color.Red), Player(Color.Blue))
+    settings = GameSettings(Vector(5, 5, 5, 5), 3, players)
+    val plan = new GamePlan(settings)
 
+    model = new GameModel(settings, plan)
 
-    val cells = dim.product
-    gameplan = ArrayBuffer.fill(cells)(-1)
-    drawGrids(0, 0, dim, size)
+    model.onVictory = (player, row) => {
+      row.foreach(pos => drawMark(pos, Color.Cyan))
+    }
+
+    model.onTurn = (player, pos) => {
+      drawMark(pos, player.color)
+    }
+
+    drawGrids(0, 0, settings.dim, size)
   }
 
   def drawGrids(top: Double, left: Double, dim: Vector[Int], size: Double): (Double, Double) = {
@@ -107,13 +103,13 @@ class MainWindowController(private val xbutton: Button, private val xcanvas: Can
 
     var (x, y) = (1, 1)
     var (xx, yy) = (1, 1)
-    for (i <- 0 until dim.length) {
+    for (i <- 0 until settings.dim.length) {
       if (i % 2 == 0) {
         x += pos(i) * xx
-        xx *= dim(i) + 1
+        xx *= settings.dim(i) + 1
       } else {
         y += pos(i) * yy
-        yy *= dim(i) + 1
+        yy *= settings.dim(i) + 1
       }
     }
 
@@ -126,11 +122,11 @@ class MainWindowController(private val xbutton: Button, private val xcanvas: Can
     val xx = mutable.Stack[Int](1)
     val yy = mutable.Stack[Int](1)
 
-    for (i <- 0 until dim.length) {
+    for (i <- 0 until settings.dim.length) {
       if (i % 2 == 0) {
-        xx.push(xx.top * (dim(i) + 1))
+        xx.push(xx.top * (settings.dim(i) + 1))
       } else {
-        yy.push(yy.top * (dim(i) + 1))
+        yy.push(yy.top * (settings.dim(i) + 1))
       }
     }
 
@@ -138,9 +134,9 @@ class MainWindowController(private val xbutton: Button, private val xcanvas: Can
     yy.pop()
 
     var (x2, y2) = (x - 1, y - 1)
-    pos.sizeHint(dim.length)
+    pos.sizeHint(settings.dim.length)
 
-    for (i <- 0 until dim.length) {
+    for (i <- 0 until settings.dim.length) {
       if (i % 2 == 1) {
         pos.insert(i, x2 / xx.top)
         x2 %= xx.top
@@ -158,75 +154,6 @@ class MainWindowController(private val xbutton: Button, private val xcanvas: Can
 
   def canvasPosToGridPos(x: Double, y: Double): (Int, Int) = {
     ((x / size).asInstanceOf[Int], (y / size).asInstanceOf[Int])
-  }
-
-  def gamePosToLinearPos(pos: Vector[Int]): Int = {
-    var linearPos = 0
-    var dimCoef = 1
-    for (i <- 0 until pos.length) {
-      linearPos += pos(i) * dimCoef
-      dimCoef *= dim(i)
-    }
-    linearPos
-  }
-
-  def isGamePosValid(pos: Vector[Int]) = {
-    pos.forall(_ >= 0) && (pos, dim).zipped.forall(_ < _)
-  }
-
-  def checkVictory(start: Vector[Int]) = {
-    val longest = findLongestRow(start)
-    if (longest.length >= winLength) {
-      longest.foreach(pos => drawMark(pos, Color.Chocolate))
-    }
-  }
-
-  def findLongestRow(start: Vector[Int]): List[Vector[Int]] = {
-    findLongestRow(start, Vector.empty)
-  }
-
-  def findLongestRow(start: Vector[Int], direction: Vector[Int]): List[Vector[Int]] = {
-    if (direction.length == dim.length) {
-      if (direction.sum > 0) getSameInRow(getMark(start), start, direction)
-      else List.empty
-
-    } else {
-      val a = findLongestRow(start, (0 :: direction.toList).toVector)
-      val b = findLongestRow(start, (1 :: direction.toList).toVector)
-
-      if (a.length < b.length) b
-      else a
-    }
-  }
-
-  def getSameInRow(mark: Int, start: Vector[Int], direction: Vector[Int]): List[Vector[Int]] = {
-    val direction2 = invertVector(direction)
-    val start2 = addVector(start, direction2)
-    getSameInRowOriented(mark, start, direction) ::: getSameInRowOriented(mark, start2, direction2)
-  }
-
-  def getSameInRowOriented(mark: Int, start: Vector[Int], direction: Vector[Int]): List[Vector[Int]] = {
-    if (isGamePosValid(start) && mark == getMark(start)) {
-      start :: getSameInRowOriented(mark, addVector(start, direction), direction)
-    } else {
-      List.empty
-    }
-  }
-
-  def addVector(a: Vector[Int], b: Vector[Int]): Vector[Int] = {
-    (a, b).zipped.map(_ + _)
-  }
-
-  def invertVector(a: Vector[Int]): Vector[Int] = {
-    a.map(-_)
-  }
-
-  def getMark(pos: Vector[Int]) = {
-    gameplan(gamePosToLinearPos(pos))
-  }
-
-  def setMark(pos: Vector[Int], mark: Int) = {
-    gameplan.update(gamePosToLinearPos(pos), mark)
   }
 
   def init(resolver: scalafxml.core.ControllerDependencyResolver) = {
