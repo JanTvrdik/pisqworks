@@ -7,13 +7,15 @@ import scalafx.scene.canvas.Canvas
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.paint.Color
 
-class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
+class GameCanvas(settings: GameSettings, canvas: Canvas) {
 
   var onClick: (Vector[Int]) => Unit = null
 
   private val context = canvas.graphicsContext2D
 
   private val sizes = initSizes()
+
+  private val size = initSize()
 
   canvas.onMouseClicked = (event: MouseEvent) => {
     val x = (event.getX / size).asInstanceOf[Int]
@@ -112,6 +114,16 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
       sizes += sizes(i) * settings.dim(i) + space - space / 2
     }
     sizes.toVector
+  }
+
+  private def initSize() = {
+    val last = sizes.takeRight(2)
+
+    if (settings.dim.length % 2 == 0) {
+      scala.math.min(canvas.width() / last(0), canvas.height() / last(1))
+    } else {
+      scala.math.min(canvas.width() / last(1), canvas.height() / last(0))
+    }
   }
 
 }

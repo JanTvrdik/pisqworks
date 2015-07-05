@@ -34,7 +34,7 @@ class MainWindowController(private val xbutton: Button, private val xcanvas: Can
       canvas.drawMark(pos, player.color)
     }
 
-    canvas = new GameCanvas(settings, xcanvas, size)
+    canvas = new GameCanvas(settings, xcanvas)
 
     canvas.onClick = (pos) => {
       model.select(pos)
