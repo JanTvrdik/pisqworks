@@ -1,7 +1,6 @@
 package com.jantvrdik.scala.app
 
 
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scalafx.Includes._
 import scalafx.scene.canvas.Canvas
@@ -13,6 +12,8 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
   var onClick: (Vector[Int]) => Unit = null
 
   private val context = canvas.graphicsContext2D
+
+  private val sizes = initSizes()
 
   canvas.onMouseClicked = (event: MouseEvent) => {
     val x = (event.getX / size).asInstanceOf[Int]
@@ -75,17 +76,12 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
 
   private def toGridPos(pos: Vector[Int]): (Int, Int) = {
     var (x, y) = (0, 0)
-    var (xx, yy) = (1, 1)
 
     for (i <- 0 until settings.dim.length) {
-      val space = 1 << (i / 2)
-      val shift = space - space / 2
       if (i % 2 == 0) {
-        x += pos(i) * xx
-        xx = xx * settings.dim(i) + shift
+        x += pos(i) * sizes(i)
       } else {
-        y += pos(i) * yy
-        yy = yy * settings.dim(i) + shift
+        y += pos(i) * sizes(i)
       }
     }
 
@@ -93,38 +89,29 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
   }
 
   private def toGamePos(x: Int, y: Int): Vector[Int] = {
+    val pos = ArrayBuffer.fill(settings.dim.length)(0)
+    var (x2, y2) = (x, y)
 
-    val pos = ArrayBuffer[Int]()
-    val xx = mutable.Stack[Int](1)
-    val yy = mutable.Stack[Int](1)
+    for (i <- settings.dim.length - 1 to 0 by -1) {
+      if (i % 2 == 0) {
+        pos.update(i, x2 / sizes(i))
+        x2 %= sizes(i)
+      } else {
+        pos.update(i, y2 / sizes(i))
+        y2 %= sizes(i)
+      }
+    }
 
+    pos.toVector
+  }
+
+  private def initSizes() = {
+    val sizes = ArrayBuffer[Int](1, 1)
     for (i <- 0 until settings.dim.length) {
       val space = 1 << (i / 2)
-      val shift = space - space / 2
-      if (i % 2 == 0) {
-        xx.push(xx.top * settings.dim(i) + shift)
-      } else {
-        yy.push(yy.top * settings.dim(i) + shift)
-      }
+      sizes += sizes(i) * settings.dim(i) + space - space / 2
     }
-
-    var (x2, y2) = (x, y)
-    pos.sizeHint(settings.dim.length)
-
-    for (i <- 0 until settings.dim.length) {
-      if (i % 2 == (settings.dim.length + 1) % 2) {
-        xx.pop()
-        pos.insert(i, x2 / xx.top)
-        x2 %= xx.top
-
-      } else {
-        yy.pop()
-        pos.insert(i, y2 / yy.top)
-        y2 %= yy.top
-      }
-    }
-
-    pos.toVector.reverse
+    sizes.toVector
   }
 
 }
