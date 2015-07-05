@@ -14,6 +14,11 @@ class MainWindowController(
                             private val playersCountInput: TextField
                             ) {
 
+  // init
+  val parent = xcanvas.parent().asInstanceOf[javafx.scene.layout.Region]
+  xcanvas.widthProperty().bind(parent.widthProperty())
+  xcanvas.heightProperty().bind(parent.heightProperty())
+
   def handleStartButtonClick(event: ActionEvent) = {
     val players = Vector(Player(Color.Red), Player(Color.Blue), Player(Color.Green), Player(Color.Black), Player(Color.Magenta))
 
@@ -28,13 +33,15 @@ class MainWindowController(
     playersCountInput.text = playersCount.toString
 
     val settings = GameSettings(dim, winLength, players.take(playersCount))
-    val model = new GameModel(settings, new GamePlan(settings))
+    val plan = new GamePlan(settings)
+    val model = new GameModel(settings, plan)
     val canvas = new GameCanvas(settings, xcanvas)
 
     model.onVictory = (player, row) => row.foreach(pos => canvas.drawMark(pos, Color.Cyan))
     model.onTurn = (player, pos) => canvas.drawMark(pos, player.color)
     canvas.onClick = (pos) => model.select(pos)
-    canvas.draw()
+    canvas.onRedraw = () => plan.iterator.foreach(v => canvas.drawMark(v._1, players(v._2).color))
+    canvas.redraw()
   }
 
   private def getDimensions = {
@@ -65,10 +72,6 @@ class MainWindowController(
     } catch {
       case _: NumberFormatException => Math.min(players.length, 3)
     }
-  }
-
-  def init(resolver: scalafxml.core.ControllerDependencyResolver) = {
-
   }
 
 }

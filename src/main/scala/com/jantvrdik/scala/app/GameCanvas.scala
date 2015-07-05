@@ -1,6 +1,8 @@
 package com.jantvrdik.scala.app
 
 
+import javafx.beans.Observable
+
 import scala.collection.mutable.ArrayBuffer
 import scalafx.Includes._
 import scalafx.scene.canvas.Canvas
@@ -10,12 +12,16 @@ import scalafx.scene.paint.Color
 class GameCanvas(settings: GameSettings, canvas: Canvas) {
 
   var onClick: (Vector[Int]) => Unit = null
+  var onRedraw: () => Unit = null
 
   private val context = canvas.graphicsContext2D
 
   private val spaces = initSpaces()
   private val sizes = initSizes()
-  private val size = initSize()
+  private var size = 0.0
+
+  canvas.width.addListener((obs: Observable) => redraw())
+  canvas.height.addListener((obs: Observable) => redraw())
 
   canvas.onMouseClicked = (event: MouseEvent) => {
     val x = (event.getX / size).asInstanceOf[Int]
@@ -23,9 +29,11 @@ class GameCanvas(settings: GameSettings, canvas: Canvas) {
     onClick(toGamePos(x, y))
   }
 
-  def draw() = {
+  def redraw(): Unit = {
     context.clearRect(0, 0, canvas.width(), canvas.height())
+    size = initSize()
     drawGrids(0, 0, settings.dim)
+    onRedraw()
   }
 
   def drawMark(pos: Vector[Int], color: Color) = {

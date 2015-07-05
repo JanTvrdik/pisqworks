@@ -2,11 +2,13 @@ package com.jantvrdik.scala.app
 
 import scala.collection.mutable.ArrayBuffer
 
-class GamePlan(settings: GameSettings) {
+class GamePlan(settings: GameSettings) extends Iterable[(Vector[Int], Int)] {
 
   type Pos = Vector[Int]
 
   private val gameplan = ArrayBuffer.fill(settings.dim.product)(-1)
+
+  private var used = List[(Pos, Int)]()
 
   def getMark(pos: Pos) = {
     gameplan(toLinearPos(pos))
@@ -14,6 +16,7 @@ class GamePlan(settings: GameSettings) {
 
   def setMark(pos: Pos, mark: Int) = {
     gameplan.update(toLinearPos(pos), mark)
+    used = (pos, mark) :: used
   }
 
   private def toLinearPos(pos: Pos): Int = {
@@ -26,4 +29,7 @@ class GamePlan(settings: GameSettings) {
     linearPos
   }
 
+  override def iterator: Iterator[(Vector[Int], Int)] = {
+    used.toIterator
+  }
 }
