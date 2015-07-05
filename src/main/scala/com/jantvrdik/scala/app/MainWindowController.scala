@@ -18,7 +18,7 @@ class MainWindowController(private val xbutton: Button, private val xcanvas: Can
     xbutton.text = "clicked!"
 
     val players = Vector(Player(Color.Red), Player(Color.Blue))
-    val dim = Vector(5, 5, 5, 5)
+    val dim = Vector(2, 3, 4, 5, 3)
     val winLength = 3
     val size = 20.0
 

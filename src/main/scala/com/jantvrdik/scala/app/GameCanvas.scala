@@ -35,23 +35,22 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
 
   private def drawGrids(top: Double, left: Double, dim: Vector[Int]): (Double, Double) = {
     if (dim.length == 2) {
-      drawGrid(top, left, dim(0), dim(1), size)
+      drawGrid(top, left, dim)
 
     } else {
       val subDim = dim.dropRight(1)
-
-      val even = dim.length % 2 == 0
-      var (totalWidth, totalHeight) = (0.0, 0.0)
+      val space = (1 << (subDim.length / 2 - 1)) * size // TODO: remove * size
+      var (totalWidth, totalHeight) = (-space, -space)
 
       for (i <- 0 until dim.last) {
-        if (even) {
-          val (w, h) = drawGrids(top + totalHeight + size, left, subDim)
+        if (dim.length % 2 == 0) {
+          val (w, h) = drawGrids(top + totalHeight + space, left, subDim)
           totalWidth = w
-          totalHeight += h + size
+          totalHeight += h + space
 
         } else {
-          val (w, h) = drawGrids(top, left + totalWidth + size, subDim)
-          totalWidth += w + size
+          val (w, h) = drawGrids(top, left + totalWidth + space, subDim)
+          totalWidth += w + space
           totalHeight = h
         }
       }
@@ -60,31 +59,33 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
     }
   }
 
-  private def drawGrid(top: Double, left: Double, width: Int, height: Int, size: Double) = {
-    val gc = canvas.getGraphicsContext2D
+  private def drawGrid(top: Double, left: Double, dim: Vector[Int]) = {
+    assert(dim.length == 2)
 
-    for (i <- 0 to width) {
-      gc.strokeLine(left + i * size, top, left + i * size, top + height * size)
+    for (i <- 0 to dim.head) {
+      context.strokeLine(left + i * size, top, left + i * size, top + dim.last * size)
     }
 
-    for (i <- 0 to height) {
-      gc.strokeLine(left, top + i * size, left + width * size, top + i * size)
+    for (i <- 0 to dim.last) {
+      context.strokeLine(left, top + i * size, left + dim.head * size, top + i * size)
     }
 
-    (width * size, height * size)
+    (dim.head * size, dim.last * size)
   }
 
   private def toGridPos(pos: Vector[Int]): (Int, Int) = {
-    var (x, y) = (1, 1)
+    var (x, y) = (0, 0)
     var (xx, yy) = (1, 1)
 
     for (i <- 0 until settings.dim.length) {
+      val space = 1 << (i / 2)
+      val shift = space - space / 2
       if (i % 2 == 0) {
         x += pos(i) * xx
-        xx *= settings.dim(i) + 1
+        xx = xx * settings.dim(i) + shift
       } else {
         y += pos(i) * yy
-        yy *= settings.dim(i) + 1
+        yy = yy * settings.dim(i) + shift
       }
     }
 
@@ -98,29 +99,28 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
     val yy = mutable.Stack[Int](1)
 
     for (i <- 0 until settings.dim.length) {
+      val space = 1 << (i / 2)
+      val shift = space - space / 2
       if (i % 2 == 0) {
-        xx.push(xx.top * (settings.dim(i) + 1))
+        xx.push(xx.top * settings.dim(i) + shift)
       } else {
-        yy.push(yy.top * (settings.dim(i) + 1))
+        yy.push(yy.top * settings.dim(i) + shift)
       }
     }
 
-    xx.pop()
-    yy.pop()
-
-    var (x2, y2) = (x - 1, y - 1)
+    var (x2, y2) = (x, y)
     pos.sizeHint(settings.dim.length)
 
     for (i <- 0 until settings.dim.length) {
-      if (i % 2 == 1) {
+      if (i % 2 == (settings.dim.length + 1) % 2) {
+        xx.pop()
         pos.insert(i, x2 / xx.top)
         x2 %= xx.top
-        xx.pop()
 
       } else {
+        yy.pop()
         pos.insert(i, y2 / yy.top)
         y2 %= yy.top
-        yy.pop()
       }
     }
 
