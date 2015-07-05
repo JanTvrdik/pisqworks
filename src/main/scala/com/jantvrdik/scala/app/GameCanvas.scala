@@ -13,8 +13,8 @@ class GameCanvas(settings: GameSettings, canvas: Canvas) {
 
   private val context = canvas.graphicsContext2D
 
+  private val spaces = initSpaces()
   private val sizes = initSizes()
-
   private val size = initSize()
 
   canvas.onMouseClicked = (event: MouseEvent) => {
@@ -24,6 +24,7 @@ class GameCanvas(settings: GameSettings, canvas: Canvas) {
   }
 
   def draw() = {
+    context.clearRect(0, 0, canvas.width(), canvas.height())
     drawGrids(0, 0, settings.dim)
   }
 
@@ -107,23 +108,22 @@ class GameCanvas(settings: GameSettings, canvas: Canvas) {
     pos.toVector
   }
 
+  private def initSpaces() = {
+    Range(0, settings.dim.length + 2).map(i => (1 << (i / 2)) / 2).toVector
+  }
+
   private def initSizes() = {
     val sizes = ArrayBuffer[Int](1, 1)
     for (i <- 0 until settings.dim.length) {
-      val space = 1 << (i / 2)
-      sizes += sizes(i) * settings.dim(i) + space - space / 2
+      sizes += sizes(i) * settings.dim(i) + spaces(i + 2) - spaces(i + 2) / 2
     }
     sizes.toVector
   }
 
   private def initSize() = {
-    val last = sizes.takeRight(2)
-
-    if (settings.dim.length % 2 == 0) {
-      scala.math.min(canvas.width() / last(0), canvas.height() / last(1))
-    } else {
-      scala.math.min(canvas.width() / last(1), canvas.height() / last(0))
-    }
+    var limits = (sizes.takeRight(2), spaces.takeRight(2)).zipped.map(_ - _)
+    if (settings.dim.length % 2 == 0) limits = limits.reverse
+    scala.math.min(canvas.width() / limits.last, canvas.height() / limits.head)
   }
 
 }
