@@ -14,7 +14,6 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
   def select(pos: Pos) = {
     if (!finished && isPosValid(pos) && plan.getMark(pos) < 0) {
       plan.setMark(pos, currentPlayer)
-      println("Selected", pos)
       onTurn(settings.players(currentPlayer), pos)
 
       val longest = findLongestRow(pos)

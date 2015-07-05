@@ -31,18 +31,9 @@ class MainWindowController(
     val model = new GameModel(settings, new GamePlan(settings))
     val canvas = new GameCanvas(settings, xcanvas)
 
-    model.onVictory = (player, row) => {
-      row.foreach(pos => canvas.drawMark(pos, Color.Cyan))
-    }
-
-    model.onTurn = (player, pos) => {
-      canvas.drawMark(pos, player.color)
-    }
-
-    canvas.onClick = (pos) => {
-      model.select(pos)
-    }
-
+    model.onVictory = (player, row) => row.foreach(pos => canvas.drawMark(pos, Color.Cyan))
+    model.onTurn = (player, pos) => canvas.drawMark(pos, player.color)
+    canvas.onClick = (pos) => model.select(pos)
     canvas.draw()
   }
 

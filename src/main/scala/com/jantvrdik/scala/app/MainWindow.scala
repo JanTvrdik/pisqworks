@@ -10,7 +10,7 @@ object MainWindow extends JFXApp {
   val resource = getClass.getResource("MainWindow.fxml")
   val root = FXMLView(resource, NoDependencyResolver)
   stage = new PrimaryStage {
-    title = "ScalaFX App"
+    title = "Scala Game!"
     scene = new Scene(root)
   }
 }
