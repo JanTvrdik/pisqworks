@@ -33,13 +33,13 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
     context.fillOval(x * size + shift, y * size + shift, markSize, markSize)
   }
 
-  private def drawGrids(top: Double, left: Double, dim: Vector[Int]): (Double, Double) = {
+  private def drawGrids(top: Int, left: Int, dim: Vector[Int]): (Int, Int) = {
     if (dim.length == 2) {
       drawGrid(top, left, dim)
 
     } else {
       val subDim = dim.dropRight(1)
-      val space = (1 << (subDim.length / 2 - 1)) * size // TODO: remove * size
+      val space = 1 << (subDim.length / 2 - 1)
       var (totalWidth, totalHeight) = (-space, -space)
 
       for (i <- 0 until dim.last) {
@@ -59,18 +59,18 @@ class GameCanvas(settings: GameSettings, canvas: Canvas, size: Double) {
     }
   }
 
-  private def drawGrid(top: Double, left: Double, dim: Vector[Int]) = {
+  private def drawGrid(top: Int, left: Int, dim: Vector[Int]) = {
     assert(dim.length == 2)
 
     for (i <- 0 to dim.head) {
-      context.strokeLine(left + i * size, top, left + i * size, top + dim.last * size)
+      context.strokeLine((left + i) * size, top * size, (left + i) * size, (top + dim.last) * size)
     }
 
     for (i <- 0 to dim.last) {
-      context.strokeLine(left, top + i * size, left + dim.head * size, top + i * size)
+      context.strokeLine(left * size, (top + i) * size, (left + dim.head) * size, (top + i) * size)
     }
 
-    (dim.head * size, dim.last * size)
+    (dim.head, dim.last)
   }
 
   private def toGridPos(pos: Vector[Int]): (Int, Int) = {
