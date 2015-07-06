@@ -4,8 +4,13 @@ import scala.collection.mutable.ArrayBuffer
 
 class GamePlan(settings: GameSettings) extends Iterable[(GamePos, Player)] {
 
+  /** dimension coefficients for transforming to linear linear position */
+  private val coef = settings.dim.scanLeft(1)(_ * _)
+
+  /** linear position => player */
   private val gameplan = ArrayBuffer.fill[Player](settings.dim.product)(null)
 
+  /** list of occupied positions */
   private var used = List[(GamePos, Player)]()
 
   def getMark(pos: GamePos) = {
@@ -18,13 +23,7 @@ class GamePlan(settings: GameSettings) extends Iterable[(GamePos, Player)] {
   }
 
   private def toLinearPos(pos: GamePos): Int = {
-    var linearPos = 0
-    var dimCoef = 1
-    for (i <- 0 until pos.length) {
-      linearPos += pos(i) * dimCoef
-      dimCoef *= settings.dim(i)
-    }
-    linearPos
+    (pos, coef).zipped.map(_ * _).sum
   }
 
   override def iterator: Iterator[(GamePos, Player)] = {
