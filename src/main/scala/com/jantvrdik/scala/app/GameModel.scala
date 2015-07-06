@@ -40,15 +40,13 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
 
   private def findLongestRow(start: Pos, direction: Direction): List[Pos] = {
     if (direction.length == settings.dim.length) {
-      if (direction.sum > 0) getSameInRow(plan.getMark(start), start, direction)
+      if (direction.exists(_ != 0)) getSameInRow(plan.getMark(start), start, direction)
       else List.empty
 
     } else {
-      val a = findLongestRow(start, (0 :: direction.toList).toVector)
-      val b = findLongestRow(start, (1 :: direction.toList).toVector)
-
-      if (a.length < b.length) b
-      else a
+      Vector(-1, 0, 1)
+        .map(i => findLongestRow(start, direction :+ i))
+        .reduceLeft((x, y) => if (x.length > y.length) x else y)
     }
   }
 
