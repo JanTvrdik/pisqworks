@@ -1,6 +1,5 @@
 package com.jantvrdik.scala.app
 
-
 import javafx.beans.Observable
 
 import scala.collection.mutable.ArrayBuffer
@@ -100,19 +99,19 @@ class GameCanvas(settings: GameSettings, canvas: Canvas) {
   }
 
   private def toGamePos(gridPos: GridPos): GamePos = {
-    val pos = ArrayBuffer.fill(settings.dim.length)(0)
+    var gamePos = List[Int]()
 
     for (i <- settings.dim.length - 1 to 0 by -1) {
       if (i % 2 == 0) {
-        pos.update(i, gridPos.x / sizes(i))
+        gamePos = gridPos.x / sizes(i) :: gamePos
         gridPos.x %= sizes(i)
       } else {
-        pos.update(i, gridPos.y / sizes(i))
+        gamePos = gridPos.y / sizes(i) :: gamePos
         gridPos.y %= sizes(i)
       }
     }
 
-    pos.toVector
+    gamePos.toVector
   }
 
   private def initSpaces() = {
