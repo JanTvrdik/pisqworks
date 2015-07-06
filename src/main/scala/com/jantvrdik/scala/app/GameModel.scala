@@ -2,17 +2,14 @@ package com.jantvrdik.scala.app
 
 class GameModel(settings: GameSettings, plan: GamePlan) {
 
-  type Pos = Vector[Int]
-  type Direction = Vector[Int]
-
-  var onVictory: (Player, List[Pos]) => Unit = null
-  var onTurn: (Player, Pos) => Unit = null
+  var onVictory: (Player, Row) => Unit = null
+  var onTurn: (Player, GamePos) => Unit = null
 
   private var currentPlayer = settings.players.head
   private var currentPlayerId = 0
   private var finished = false
 
-  def select(pos: Pos) = {
+  def select(pos: GamePos) = {
     if (!finished && isPosValid(pos) && plan.getMark(pos) == null) {
       plan.setMark(pos, currentPlayer)
       onTurn(currentPlayer, pos)
@@ -32,15 +29,15 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
     }
   }
 
-  private def isPosValid(pos: Pos) = {
+  private def isPosValid(pos: GamePos) = {
     pos.forall(_ >= 0) && (pos, settings.dim).zipped.forall(_ < _)
   }
 
-  private def findLongestRow(start: Pos): List[Pos] = {
+  private def findLongestRow(start: GamePos): Row = {
     findLongestRow(start, Vector.empty)
   }
 
-  private def findLongestRow(start: Pos, direction: Direction): List[Pos] = {
+  private def findLongestRow(start: GamePos, direction: Direction): Row = {
     if (direction.length == settings.dim.length) {
       if (direction.exists(_ != 0)) getSameInRow(plan.getMark(start), start, direction)
       else List.empty
@@ -52,13 +49,13 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
     }
   }
 
-  private def getSameInRow(mark: Player, start: Pos, direction: Direction): List[Pos] = {
+  private def getSameInRow(mark: Player, start: GamePos, direction: Direction): Row = {
     val direction2 = invertVector(direction)
     val start2 = addVector(start, direction2)
     getSameInRowOriented(mark, start, direction) ::: getSameInRowOriented(mark, start2, direction2)
   }
 
-  private def getSameInRowOriented(mark: Player, start: Pos, direction: Direction): List[Pos] = {
+  private def getSameInRowOriented(mark: Player, start: GamePos, direction: Direction): Row = {
     if (isPosValid(start) && mark == plan.getMark(start)) {
       start :: getSameInRowOriented(mark, addVector(start, direction), direction)
     } else {
@@ -66,7 +63,7 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
     }
   }
 
-  private def addVector(a: Pos, b: Direction) = {
+  private def addVector(a: GamePos, b: Direction) = {
     (a, b).zipped.map(_ + _)
   }
 

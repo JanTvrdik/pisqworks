@@ -1,5 +1,5 @@
 package com.jantvrdik.scala.app
 
-case class GameSettings(dim: Vector[Int], winLength: Int, players: Vector[Player]) {
+case class GameSettings(dim: Dimensions, winLength: Int, players: Vector[Player]) {
 
 }

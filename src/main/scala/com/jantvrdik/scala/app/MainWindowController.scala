@@ -56,7 +56,7 @@ class MainWindowController(
     }
   }
 
-  private def getWinLength(dim: Vector[Int]) = {
+  private def getWinLength(dim: Dimensions) = {
     try {
       Math.max(1, Math.min(dim.max, winLengthInput.text().toInt))
 

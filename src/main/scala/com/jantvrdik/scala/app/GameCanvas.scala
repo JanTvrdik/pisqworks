@@ -11,7 +11,7 @@ import scalafx.scene.paint.Color
 
 class GameCanvas(settings: GameSettings, canvas: Canvas) {
 
-  var onClick: (Vector[Int]) => Unit = null
+  var onClick: (GamePos) => Unit = null
   var onRedraw: () => Unit = null
 
   private val context = canvas.graphicsContext2D
@@ -26,28 +26,28 @@ class GameCanvas(settings: GameSettings, canvas: Canvas) {
   canvas.onMouseClicked = (event: MouseEvent) => {
     val x = (event.getX / size).asInstanceOf[Int]
     val y = (event.getY / size).asInstanceOf[Int]
-    onClick(toGamePos(x, y))
+    onClick(toGamePos(GridPos(x, y)))
   }
 
   def redraw(): Unit = {
     context.clearRect(0, 0, canvas.width(), canvas.height())
     size = initSize()
-    drawGrids(0, 0, settings.dim)
+    drawGrids(GridPos(0, 0), settings.dim)
     onRedraw()
   }
 
-  def drawMark(pos: Vector[Int], color: Color) = {
-    val (x, y) = toGridPos(pos)
+  def drawMark(gamePos: GamePos, color: Color) = {
+    val gridPos = toGridPos(gamePos)
     val markSize = size / 2
     val shift = size / 2 - markSize / 2
 
     context.setFill(color)
-    context.fillOval(x * size + shift, y * size + shift, markSize, markSize)
+    context.fillOval(gridPos.x * size + shift, gridPos.y * size + shift, markSize, markSize)
   }
 
-  private def drawGrids(top: Int, left: Int, dim: Vector[Int]): (Int, Int) = {
+  private def drawGrids(pos: GridPos, dim: Dimensions): (Int, Int) = {
     if (dim.length == 2) {
-      drawGrid(top, left, dim)
+      drawGrid(pos, dim)
 
     } else {
       val subDim = dim.dropRight(1)
@@ -56,12 +56,12 @@ class GameCanvas(settings: GameSettings, canvas: Canvas) {
 
       for (i <- 0 until dim.last) {
         if (dim.length % 2 == 0) {
-          val (w, h) = drawGrids(top + totalHeight + space, left, subDim)
+          val (w, h) = drawGrids(GridPos(pos.x, pos.y + totalHeight + space), subDim)
           totalWidth = w
           totalHeight += h + space
 
         } else {
-          val (w, h) = drawGrids(top, left + totalWidth + space, subDim)
+          val (w, h) = drawGrids(GridPos(pos.x + totalWidth + space, pos.y), subDim)
           totalWidth += w + space
           totalHeight = h
         }
@@ -71,45 +71,44 @@ class GameCanvas(settings: GameSettings, canvas: Canvas) {
     }
   }
 
-  private def drawGrid(top: Int, left: Int, dim: Vector[Int]) = {
+  private def drawGrid(pos: GridPos, dim: Dimensions) = {
     assert(dim.length == 2)
 
     for (i <- 0 to dim.head) {
-      context.strokeLine((left + i) * size, top * size, (left + i) * size, (top + dim.last) * size)
+      context.strokeLine((pos.x + i) * size, pos.y * size, (pos.x + i) * size, (pos.y + dim.last) * size)
     }
 
     for (i <- 0 to dim.last) {
-      context.strokeLine(left * size, (top + i) * size, (left + dim.head) * size, (top + i) * size)
+      context.strokeLine(pos.x * size, (pos.y + i) * size, (pos.x + dim.head) * size, (pos.y + i) * size)
     }
 
     (dim.head, dim.last)
   }
 
-  private def toGridPos(pos: Vector[Int]): (Int, Int) = {
-    var (x, y) = (0, 0)
+  private def toGridPos(gamePos: GamePos): GridPos = {
+    val gridPos = GridPos(0, 0)
 
     for (i <- 0 until settings.dim.length) {
       if (i % 2 == 0) {
-        x += pos(i) * sizes(i)
+        gridPos.x += gamePos(i) * sizes(i)
       } else {
-        y += pos(i) * sizes(i)
+        gridPos.y += gamePos(i) * sizes(i)
       }
     }
 
-    (x, y)
+    gridPos
   }
 
-  private def toGamePos(x: Int, y: Int): Vector[Int] = {
+  private def toGamePos(gridPos: GridPos): GamePos = {
     val pos = ArrayBuffer.fill(settings.dim.length)(0)
-    var (x2, y2) = (x, y)
 
     for (i <- settings.dim.length - 1 to 0 by -1) {
       if (i % 2 == 0) {
-        pos.update(i, x2 / sizes(i))
-        x2 %= sizes(i)
+        pos.update(i, gridPos.x / sizes(i))
+        gridPos.x %= sizes(i)
       } else {
-        pos.update(i, y2 / sizes(i))
-        y2 %= sizes(i)
+        pos.update(i, gridPos.y / sizes(i))
+        gridPos.y %= sizes(i)
       }
     }
 
@@ -133,5 +132,7 @@ class GameCanvas(settings: GameSettings, canvas: Canvas) {
     if (settings.dim.length % 2 == 0) limits = limits.reverse
     scala.math.min(canvas.width() / limits.last, canvas.height() / limits.head)
   }
+
+  private case class GridPos(var x: Int, var y: Int)
 
 }
