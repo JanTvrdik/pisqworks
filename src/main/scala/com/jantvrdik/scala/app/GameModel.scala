@@ -8,21 +8,23 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
   var onVictory: (Player, List[Pos]) => Unit = null
   var onTurn: (Player, Pos) => Unit = null
 
-  private var currentPlayer = 0
+  private var currentPlayer = settings.players.head
+  private var currentPlayerId = 0
   private var finished = false
 
   def select(pos: Pos) = {
-    if (!finished && isPosValid(pos) && plan.getMark(pos) < 0) {
+    if (!finished && isPosValid(pos) && plan.getMark(pos) == null) {
       plan.setMark(pos, currentPlayer)
-      onTurn(settings.players(currentPlayer), pos)
+      onTurn(currentPlayer, pos)
 
       val longest = findLongestRow(pos)
       if (longest.length >= settings.winLength) {
-        onVictory(settings.players(currentPlayer), longest)
+        onVictory(currentPlayer, longest)
         finished = true
       }
 
-      currentPlayer = (currentPlayer + 1) % settings.players.length
+      currentPlayerId = (currentPlayerId + 1) % settings.players.length
+      currentPlayer = settings.players(currentPlayerId)
       true
 
     } else {
@@ -50,13 +52,13 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
     }
   }
 
-  private def getSameInRow(mark: Int, start: Pos, direction: Direction): List[Pos] = {
+  private def getSameInRow(mark: Player, start: Pos, direction: Direction): List[Pos] = {
     val direction2 = invertVector(direction)
     val start2 = addVector(start, direction2)
     getSameInRowOriented(mark, start, direction) ::: getSameInRowOriented(mark, start2, direction2)
   }
 
-  private def getSameInRowOriented(mark: Int, start: Pos, direction: Direction): List[Pos] = {
+  private def getSameInRowOriented(mark: Player, start: Pos, direction: Direction): List[Pos] = {
     if (isPosValid(start) && mark == plan.getMark(start)) {
       start :: getSameInRowOriented(mark, addVector(start, direction), direction)
     } else {

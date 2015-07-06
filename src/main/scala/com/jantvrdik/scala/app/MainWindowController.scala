@@ -40,7 +40,7 @@ class MainWindowController(
     model.onVictory = (player, row) => row.foreach(pos => canvas.drawMark(pos, Color.Cyan))
     model.onTurn = (player, pos) => canvas.drawMark(pos, player.color)
     canvas.onClick = (pos) => model.select(pos)
-    canvas.onRedraw = () => plan.iterator.foreach(v => canvas.drawMark(v._1, players(v._2).color))
+    canvas.onRedraw = () => plan.iterator.foreach(v => canvas.drawMark(v._1, v._2.color))
     canvas.redraw()
   }
 
