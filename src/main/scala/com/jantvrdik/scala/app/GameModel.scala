@@ -34,17 +34,18 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
   }
 
   private def findLongestRow(start: GamePos): Row = {
-    findLongestRow(start, List.empty)
+    findLongestRow(start, List.empty, positive = false)
   }
 
-  private def findLongestRow(start: GamePos, direction: Direction): Row = {
+  private def findLongestRow(start: GamePos, direction: Direction, positive: Boolean): Row = {
     if (direction.length == settings.dim.length) {
-      if (direction.exists(_ != 0)) getSameInRow(plan.getMark(start), start, direction)
+      if (positive) getSameInRow(plan.getMark(start), start, direction)
       else List.empty
 
     } else {
-      Vector(-1, 0, 1)
-        .map(i => findLongestRow(start, i :: direction))
+      Vector(0, 1, -1)
+        .filter(positive || _ >= 0)
+        .map(i => findLongestRow(start, i :: direction, positive || i == 1))
         .reduceLeft((x, y) => if (x.length > y.length) x else y)
     }
   }
