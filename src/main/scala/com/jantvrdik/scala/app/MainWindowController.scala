@@ -8,16 +8,20 @@ import scalafxml.core.macros.sfxml
 
 @sfxml
 class MainWindowController(
-                            private val xcanvas: Canvas,
+                            private val baseCanvas: Canvas,
+                            private val topCanvas: Canvas,
                             private val dimensionsInput: TextField,
                             private val winLengthInput: TextField,
                             private val playersCountInput: TextField
                             ) {
 
   // init
-  val parent = xcanvas.parent().asInstanceOf[javafx.scene.layout.Region]
-  xcanvas.widthProperty().bind(parent.widthProperty())
-  xcanvas.heightProperty().bind(parent.heightProperty())
+  val parent = baseCanvas.parent().asInstanceOf[javafx.scene.layout.Region]
+  baseCanvas.widthProperty().bind(parent.widthProperty())
+  baseCanvas.heightProperty().bind(parent.heightProperty())
+
+  topCanvas.widthProperty().bind(parent.widthProperty())
+  topCanvas.heightProperty().bind(parent.heightProperty())
 
   def handleStartButtonClick(event: ActionEvent) = {
     val players = Vector(Player(Color.Red), Player(Color.Blue), Player(Color.Green), Player(Color.Black), Player(Color.Magenta))
@@ -35,11 +39,12 @@ class MainWindowController(
     val settings = GameSettings(dim, winLength, players.take(playersCount))
     val plan = new GamePlan(settings)
     val model = new GameModel(settings, plan)
-    val canvas = new GameCanvas(settings, xcanvas)
+    val canvas = new GameCanvas(settings, baseCanvas, topCanvas)
 
     model.onVictory = (player, row) => row.foreach(pos => canvas.drawMark(pos, Color.Cyan))
     model.onTurn = (player, pos) => canvas.drawMark(pos, player.color)
     canvas.onClick = (pos) => model.select(pos)
+    canvas.onHover = (pos) => canvas.drawNeighbours(model.neightbours(pos))
     canvas.onRedraw = () => plan.iterator.foreach(v => canvas.drawMark(v._1, v._2.color))
     canvas.redraw()
   }

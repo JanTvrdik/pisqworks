@@ -29,6 +29,26 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
     }
   }
 
+  def neightbours(pos: GamePos): List[GamePos] = {
+    if (isPosValid(pos)) {
+      neightbours(pos, List.empty, positive = true)
+    } else {
+      List.empty
+    }
+  }
+
+  private def neightbours(pos: GamePos, direction: Direction, positive: Boolean): List[GamePos] = {
+    if (direction.length == settings.dim.length) {
+      if (positive) List(addVector(pos, direction)).filter(isPosValid)
+      else List.empty
+
+    } else {
+      List(0, 1, -1)
+        .filter(positive || _ >= 0)
+        .flatMap(i => neightbours(pos, i :: direction, positive || i == 1))
+    }
+  }
+
   private def isPosValid(pos: GamePos) = {
     pos.forall(_ >= 0) && (pos, settings.dim).zipped.forall(_ < _)
   }
