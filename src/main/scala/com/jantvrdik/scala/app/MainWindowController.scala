@@ -45,7 +45,7 @@ class MainWindowController(
     model.onTurn = (player, pos) => canvas.drawMark(pos, player.color)
     canvas.onClick = (pos) => model.select(pos)
     canvas.onHover = (pos) => canvas.drawNeighbours(model.neightbours(pos))
-    canvas.onRedraw = () => plan.iterator.foreach(v => canvas.drawMark(v._1, v._2.color))
+    canvas.onRedraw = () => plan.occupied.foreach(v => canvas.drawMark(v._1, v._2.color))
     canvas.redraw()
   }
 
