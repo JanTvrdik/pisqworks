@@ -29,23 +29,26 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
     }
   }
 
-  def neightbours(pos: GamePos): List[GamePos] = {
+  def neighbors(pos: GamePos): List[GamePos] = {
     if (isPosValid(pos)) {
-      neightbours(pos, List.empty, positive = true)
+      neighbors(pos, List.empty, positive = false)
     } else {
       List.empty
     }
   }
 
-  private def neightbours(pos: GamePos, direction: Direction, positive: Boolean): List[GamePos] = {
-    if (direction.length == settings.dim.length) {
-      if (positive) List(addVector(pos, direction)).filter(isPosValid)
-      else List.empty
+  private def neighbors(start: GamePos, neighbor: Direction, positive: Boolean): List[GamePos] = {
+    if (neighbor.length == settings.dim.length) {
+      List(neighbor.toVector).filter(_ => positive)
 
     } else {
-      List(0, 1, -1)
-        .filter(positive || _ >= 0)
-        .flatMap(i => neightbours(pos, i :: direction, positive || i == 1))
+      val j = settings.dim.length - neighbor.length - 1
+      val base = start(j)
+      val max = settings.dim(j)
+
+      List(base, base + 1, base - 1)
+        .filter(i => i >= 0 && i < max)
+        .flatMap(i => neighbors(start, i :: neighbor, positive || i != base))
     }
   }
 
