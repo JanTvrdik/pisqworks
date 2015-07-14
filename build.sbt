@@ -8,7 +8,8 @@ scalaVersion := "2.11.6"
 // Add managed dependency on ScalaFX library
 libraryDependencies ++= Seq(
   "org.scalafx" %% "scalafx"        % "8.0.0-R4",
-  "org.scalafx" %% "scalafxml-core-sfx8" % "0.2.2"
+  "org.scalafx" %% "scalafxml-core-sfx8" % "0.2.2",
+  "junit" % "junit" % "4.11" % "test"
 )
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.1" cross CrossVersion.full)
