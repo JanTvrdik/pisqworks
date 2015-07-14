@@ -3,6 +3,7 @@ package com.jantvrdik.scala.app
 import scalafx.event.ActionEvent
 import scalafx.scene.canvas.Canvas
 import scalafx.scene.control.TextField
+import scalafx.scene.input.MouseButton
 import scalafx.scene.paint.Color
 import scalafxml.core.macros.sfxml
 
@@ -43,9 +44,30 @@ class MainWindowController(
 
     model.onVictory = (player, row) => row.foreach(pos => canvas.drawMark(pos, Color.Cyan))
     model.onTurn = (player, pos) => canvas.drawMark(pos, player.color)
-    canvas.onClick = (pos) => model.select(pos)
-    canvas.onHover = (pos) => canvas.drawNeighbours(model.neighbors(pos))
-    canvas.onRedraw = () => plan.occupied.foreach(v => canvas.drawMark(v._1, v._2.color))
+
+    canvas.onMousePressed = (event, pos) => {
+      if (event.button == MouseButton.SECONDARY) {
+        canvas.drawNeighbours(model.neighbors(pos))
+      }
+    }
+
+    canvas.onMouseReleased = (event, pos) => {
+      canvas.drawNeighbours(List.empty)
+      if (event.button == MouseButton.PRIMARY) {
+        model.select(pos)
+      }
+    }
+
+    canvas.onMouseDragged = (event, pos) => {
+      if (event.secondaryButtonDown) {
+        canvas.drawNeighbours(model.neighbors(pos))
+      }
+    }
+
+    canvas.onRedraw = () => {
+      plan.occupied.foreach(v => canvas.drawMark(v._1, v._2.color))
+    }
+
     canvas.redraw()
   }
 

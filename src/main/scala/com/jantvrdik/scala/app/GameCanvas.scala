@@ -9,9 +9,11 @@ import scalafx.scene.input.MouseEvent
 import scalafx.scene.paint.Color
 
 class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) {
+  type MouseListener = (MouseEvent, GamePos) => Unit
 
-  var onClick: (GamePos) => Unit = null
-  var onHover: (GamePos) => Unit = null
+  var onMousePressed: MouseListener = null
+  var onMouseReleased: MouseListener = null
+  var onMouseDragged: MouseListener = null
   var onRedraw: () => Unit = null
 
   private val baseContext = baseCanvas.graphicsContext2D
@@ -23,22 +25,19 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
 
   private var lastPos: GamePos = null
 
-
   val canvasSizeListener = (obs: Observable) => redraw()
   baseCanvas.width.addListener(canvasSizeListener)
   baseCanvas.height.addListener(canvasSizeListener)
   topCanvas.width.addListener(canvasSizeListener)
   topCanvas.height.addListener(canvasSizeListener)
 
-  topCanvas.onMouseClicked = (event: MouseEvent) => {
-    onClick(toGamePos(event))
-  }
-
-  topCanvas.onMouseMoved = (event: MouseEvent) => {
+  topCanvas.onMousePressed = (event: MouseEvent) => onMousePressed(event, toGamePos(event))
+  topCanvas.onMouseReleased = (event: MouseEvent) => onMouseReleased(event, toGamePos(event))
+  topCanvas.onMouseDragged = (event: MouseEvent) => {
     val currentPos = toGamePos(event)
-    if (lastPos == null || (lastPos, currentPos).zipped.exists(_ != _)) { // TODO: better compare
+    if (!currentPos.equals(lastPos)) {
       lastPos = currentPos
-      onHover(currentPos)
+      onMouseDragged(event, currentPos)
     }
   }
 
