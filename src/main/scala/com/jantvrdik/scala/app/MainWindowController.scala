@@ -38,7 +38,7 @@ class MainWindowController(
     }
 
     model.onVictory = (player, row) => {
-      row.foreach(pos => canvas.drawMark(pos, Color.Cyan))
+      canvas.drawHighlights(row)
     }
 
     canvas.onMousePressed = (event, pos) => {

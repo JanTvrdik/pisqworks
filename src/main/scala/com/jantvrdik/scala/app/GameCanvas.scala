@@ -36,6 +36,9 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
   /** list of placed marks */
   private var marks = List.empty[Mark]
 
+  /** list of highlighted positions */
+  private var highlights = List.empty[GridPos]
+
   topCanvas.width.addListener((obs: Observable) => redraw())
   topCanvas.height.addListener((obs: Observable) => redraw())
 
@@ -55,24 +58,26 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
 
     size = initSize()
     drawGrids(GridPos(0, 0), settings.dim)
-    marks.foreach(mark => drawMark(mark))
+    drawMark(marks)
+    drawHighlight(highlights)
   }
 
   def drawMark(gamePos: GamePos, color: Color) {
     val mark = Mark(toGridPos(gamePos), color)
-    drawMark(mark)
+    drawMark(List(mark))
     marks = mark :: marks
   }
 
   def drawNeighbours(neighbours: List[GamePos]) {
     clear(topCanvas)
-    neighbours.foreach(gamePos => {
-      val gridPos = toGridPos(gamePos)
-      val markSize = size * 0.6
-      val shift = size / 2 - markSize / 2
-      topContext.setStroke(Color.Brown)
-      topContext.strokeOval(gridPos.x * size + shift, gridPos.y * size + shift, markSize, markSize)
-    })
+    drawHighlight(highlights)
+    drawNeighbour(neighbours.map(toGridPos))
+  }
+
+  def drawHighlights(positions: List[GamePos]) {
+    highlights = positions.map(toGridPos) ::: highlights
+    clear(topCanvas)
+    drawHighlight(highlights)
   }
 
   private def drawGrids(pos: GridPos, dim: Dimensions): (Int, Int) = {
@@ -115,11 +120,38 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
     (dim.head, dim.last)
   }
 
-  private def drawMark(mark: Mark) = {
+  private def drawMark(marks: Seq[Mark]) = {
     val markSize = size / 2
     val shift = size / 2 - markSize / 2
-    baseContext.setFill(mark.color)
-    baseContext.fillOval(mark.pos.x * size + shift, mark.pos.y * size + shift, markSize, markSize)
+
+    marks.foreach(mark => {
+      baseContext.setFill(mark.color)
+      baseContext.fillOval(mark.pos.x * size + shift, mark.pos.y * size + shift, markSize, markSize)
+    })
+  }
+
+  private def drawNeighbour(neighbours: Seq[GridPos]) {
+    val markSize = size * 0.6
+    val shift = size / 2 - markSize / 2
+
+    topContext.setStroke(Color.Brown)
+    topContext.setLineWidth(1)
+
+    neighbours.foreach(gridPos => {
+      topContext.strokeOval(gridPos.x * size + shift, gridPos.y * size + shift, markSize, markSize)
+    })
+  }
+
+  private def drawHighlight(positions: Seq[GridPos]) {
+    val markSize = size * 0.6
+    val shift = size / 2 - markSize / 2
+
+    topContext.setStroke(Color.Yellow)
+    topContext.setLineWidth(3)
+
+    positions.foreach(pos => {
+      topContext.strokeOval(pos.x * size + shift, pos.y * size + shift, markSize, markSize)
+    })
   }
 
   private def clear(canvas: Canvas) {
