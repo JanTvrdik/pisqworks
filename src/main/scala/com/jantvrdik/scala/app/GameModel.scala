@@ -14,11 +14,8 @@ class GameModel(settings: GameSettings) {
   /** number of current turn */
   private var turn = 0
 
-  /** has any player already won?  */
-  private var finished = false
-
   def select(pos: GamePos): Boolean = {
-    if (finished || !isPosValid(pos)) {
+    if (!isPosValid(pos)) {
       return false
     }
 
@@ -33,7 +30,6 @@ class GameModel(settings: GameSettings) {
 
     val longest = longestRow(pos)
     if (longest.length >= settings.winLength) {
-      finished = true
       onVictory(pointer.mark, longest)
     }
 
