@@ -70,6 +70,7 @@ class MainWindowController(
 
     canvas.redraw()
     showCurrentPlayer(model)
+    topCanvas.requestFocus()
   }
 
   private def getDimensions = {
