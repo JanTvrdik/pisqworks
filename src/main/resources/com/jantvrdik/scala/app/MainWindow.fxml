@@ -47,7 +47,7 @@
 								<Insets right="30.0"/>
 							</HBox.margin>
 						</Button>
-						<Canvas height="10" width="10" fx:id="playerCanvas"/>
+						<Canvas height="15" width="15" fx:id="playerCanvas"/>
 					</children>
 				</HBox>
 				<Pane GridPane.rowIndex="1">

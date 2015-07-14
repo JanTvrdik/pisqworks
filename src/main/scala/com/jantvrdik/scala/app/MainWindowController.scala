@@ -110,7 +110,7 @@ class MainWindowController(
   private def showCurrentPlayer(model: GameModel) {
     val context = playerCanvas.graphicsContext2D
     context.setFill(model.currentPlayer.color)
-    context.clearRect(0, 0, 10, 10)
-    context.fillOval(0, 0, 10, 10)
+    context.clearRect(0, 0, playerCanvas.width(), playerCanvas.height())
+    context.fillOval(0, 0, playerCanvas.width(), playerCanvas.height())
   }
 }
