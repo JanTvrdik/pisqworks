@@ -24,18 +24,21 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
       return false
     }
 
-    pointer.mark = settings.players(turn % settings.players.length)
+    pointer.mark = currentPlayer
+    turn = turn + 1
     onTurn(pointer.mark, pos)
 
     val longest = longestRow(pos)
     if (longest.length >= settings.winLength) {
       finished = true
       onVictory(pointer.mark, longest)
-    } else {
-      turn = turn + 1
     }
 
     true
+  }
+
+  def currentPlayer = {
+    settings.players(turn % settings.players.length)
   }
 
   def neighbors(pos: GamePos): List[GamePos] = {

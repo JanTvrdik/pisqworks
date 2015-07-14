@@ -11,6 +11,7 @@ import scalafxml.core.macros.sfxml
 class MainWindowController(
                             private val baseCanvas: Canvas,
                             private val topCanvas: Canvas,
+                            private val playerCanvas: Canvas,
                             private val dimensionsInput: TextField,
                             private val winLengthInput: TextField,
                             private val playersCountInput: TextField
@@ -43,7 +44,10 @@ class MainWindowController(
     val canvas = new GameCanvas(settings, baseCanvas, topCanvas)
 
     model.onVictory = (player, row) => row.foreach(pos => canvas.drawMark(pos, Color.Cyan))
-    model.onTurn = (player, pos) => canvas.drawMark(pos, player.color)
+    model.onTurn = (player, pos) => {
+      canvas.drawMark(pos, player.color)
+      showCurrentPlayer(model)
+    }
 
     canvas.onMousePressed = (event, pos) => {
       if (event.button == MouseButton.SECONDARY) {
@@ -65,6 +69,7 @@ class MainWindowController(
     }
 
     canvas.redraw()
+    showCurrentPlayer(model)
   }
 
   private def getDimensions = {
@@ -97,4 +102,10 @@ class MainWindowController(
     }
   }
 
+  private def showCurrentPlayer(model: GameModel) {
+    val context = playerCanvas.graphicsContext2D
+    context.setFill(model.currentPlayer.color)
+    context.clearRect(0, 0, 10, 10)
+    context.fillOval(0, 0, 10, 10)
+  }
 }
