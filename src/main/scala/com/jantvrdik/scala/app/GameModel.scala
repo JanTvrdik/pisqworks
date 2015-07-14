@@ -2,11 +2,16 @@ package com.jantvrdik.scala.app
 
 class GameModel(settings: GameSettings, plan: GamePlan) {
 
+  /** called when a player wins */
   var onVictory: (Player, Row) => Unit = null
+
+  /** called on every successful turn */
   var onTurn: (Player, GamePos) => Unit = null
 
-  private var currentPlayer = settings.players.head
-  private var currentPlayerId = 0
+  /** number of current turn */
+  private var turn = 0
+
+  /** has any player already won?  */
   private var finished = false
 
   def select(pos: GamePos): Boolean = {
@@ -19,17 +24,17 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
       return false
     }
 
-    pointer.mark = currentPlayer
-    onTurn(currentPlayer, pos)
+    pointer.mark = settings.players(turn % settings.players.length)
+    onTurn(pointer.mark, pos)
 
     val longest = longestRow(pos)
     if (longest.length >= settings.winLength) {
       finished = true
-      onVictory(currentPlayer, longest)
+      onVictory(pointer.mark, longest)
+    } else {
+      turn = turn + 1
     }
 
-    currentPlayerId = (currentPlayerId + 1) % settings.players.length
-    currentPlayer = settings.players(currentPlayerId)
     true
   }
 

@@ -14,24 +14,17 @@ class GamePlan(settings: GameSettings) {
     .reverse
     .toList
 
+  /** direction => jump */
+  private val jumps = neighborDirections()
+    .toVector
+    .map(toLinearJump)
+    .filter(_ >= 0)
+
   /** linear position => player */
   private val gameplan = ArrayBuffer.fill[Player](coefIn.last)(null)
 
-  private val neighborJumps = neighborDirections()
-    .toVector
-    .map(toLinearPos)
-    .filter(_ >= 0)
-
-  private def neighborDirections(direction: Direction = List.empty): List[Direction] = {
-    if (direction.length == settings.dim.length) {
-      List(direction)
-    } else {
-      List(0, +1, -1).flatMap(i => neighborDirections(i :: direction))
-    }
-  }
-
   def directions = {
-    1 until neighborJumps.length
+    1 until jumps.length
   }
 
   def pointer(pos: GamePos) = {
@@ -42,7 +35,7 @@ class GamePlan(settings: GameSettings) {
     (pos.map(_ + 1), coefIn).zipped.map(_ * _).sum
   }
 
-  private def toLinearPos(dir: Direction): Int = {
+  private def toLinearJump(dir: Direction): Int = {
     (dir, coefIn).zipped.map(_ * _).sum
   }
 
@@ -51,10 +44,16 @@ class GamePlan(settings: GameSettings) {
   }
 
   private def toGamePos(pos: Int, coef: List[Int]): List[Int] = {
-    if (coef.length == 0) {
-      List.empty
-    } else {
-      (pos / coef.head - 1) :: toGamePos(pos % coef.head, coef.tail)
+    coef.length match {
+      case 0 => List.empty
+      case _ => (pos / coef.head - 1) :: toGamePos(pos % coef.head, coef.tail)
+    }
+  }
+
+  private def neighborDirections(direction: Direction = List.empty): List[Direction] = {
+    settings.dim.length - direction.length match {
+      case 0 => List(direction)
+      case _ => List(0, +1, -1).flatMap(i => neighborDirections(i :: direction))
     }
   }
 
@@ -76,7 +75,7 @@ class GamePlan(settings: GameSettings) {
     }
 
     def move(direction: Int) = {
-      val jump = math.signum(direction) * neighborJumps(math.abs(direction))
+      val jump = math.signum(direction) * jumps(math.abs(direction))
       Pointer(linearPos + jump)
     }
   }

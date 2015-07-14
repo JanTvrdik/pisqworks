@@ -4,7 +4,7 @@ import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
-import scalafxml.core.{NoDependencyResolver, FXMLView}
+import scalafxml.core.{FXMLView, NoDependencyResolver}
 
 object MainWindow extends JFXApp {
   val resource = getClass.getResource("MainWindow.fxml")

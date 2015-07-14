@@ -11,27 +11,33 @@ import scalafx.scene.paint.Color
 class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) {
   type MouseListener = (MouseEvent, GamePos) => Unit
 
-  var onMousePressed: MouseListener = null
-  var onMouseReleased: MouseListener = null
-  var onMouseDragged: MouseListener = null
+  var onMousePressed: MouseListener = _
+  var onMouseReleased: MouseListener = _
+  var onMouseDragged: MouseListener = _
 
+  /** canvas context of base layer */
   private val baseContext = baseCanvas.graphicsContext2D
+
+  /** canvas context of top layer */
   private val topContext = topCanvas.graphicsContext2D
 
+  /** dimension => space width */
   private val spaces = initSpaces()
-  private val sizes = initSizes()
-  private var size = 0.0
 
-  private var lastPos: GamePos = null
+  /** dimension => block width (including space) */
+  private val sizes = initSizes()
+
+  /** width and height of a single cell */
+  private var size: Double = _
+
+  /** last position while dragging */
+  private var lastPos: GamePos = _
 
   /** list of placed marks */
   private var marks = List.empty[Mark]
 
-  val canvasSizeListener = (obs: Observable) => redraw()
-  baseCanvas.width.addListener(canvasSizeListener)
-  baseCanvas.height.addListener(canvasSizeListener)
-  topCanvas.width.addListener(canvasSizeListener)
-  topCanvas.height.addListener(canvasSizeListener)
+  topCanvas.width.addListener((obs: Observable) => redraw())
+  topCanvas.height.addListener((obs: Observable) => redraw())
 
   topCanvas.onMousePressed = (event: MouseEvent) => onMousePressed(event, toGamePos(event))
   topCanvas.onMouseReleased = (event: MouseEvent) => onMouseReleased(event, toGamePos(event))
@@ -47,10 +53,8 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
     clear(baseCanvas)
     clear(topCanvas)
 
-    baseContext.clearRect(0, 0, baseCanvas.width(), baseCanvas.height())
     size = initSize()
     drawGrids(GridPos(0, 0), settings.dim)
-
     marks.foreach(mark => drawMark(mark))
   }
 
@@ -66,21 +70,9 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
       val gridPos = toGridPos(gamePos)
       val markSize = size * 0.6
       val shift = size / 2 - markSize / 2
-
       topContext.setStroke(Color.Brown)
       topContext.strokeOval(gridPos.x * size + shift, gridPos.y * size + shift, markSize, markSize)
     })
-  }
-
-  private def drawMark(mark: Mark) = {
-    val markSize = size / 2
-    val shift = size / 2 - markSize / 2
-    baseContext.setFill(mark.color)
-    baseContext.fillOval(mark.pos.x * size + shift, mark.pos.y * size + shift, markSize, markSize)
-  }
-
-  private def clear(canvas: Canvas) {
-    canvas.graphicsContext2D.clearRect(0, 0, canvas.width(), canvas.height())
   }
 
   private def drawGrids(pos: GridPos, dim: Dimensions): (Int, Int) = {
@@ -89,7 +81,7 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
 
     } else {
       val subDim = dim.dropRight(1)
-      val space = 1 << (subDim.length / 2 - 1)
+      val space = spaces(subDim.length)
       var (totalWidth, totalHeight) = (-space, -space)
 
       for (i <- 0 until dim.last) {
@@ -121,6 +113,17 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
     }
 
     (dim.head, dim.last)
+  }
+
+  private def drawMark(mark: Mark) = {
+    val markSize = size / 2
+    val shift = size / 2 - markSize / 2
+    baseContext.setFill(mark.color)
+    baseContext.fillOval(mark.pos.x * size + shift, mark.pos.y * size + shift, markSize, markSize)
+  }
+
+  private def clear(canvas: Canvas) {
+    canvas.graphicsContext2D.clearRect(0, 0, canvas.width(), canvas.height())
   }
 
   private def toGridPos(gamePos: GamePos): GridPos = {
