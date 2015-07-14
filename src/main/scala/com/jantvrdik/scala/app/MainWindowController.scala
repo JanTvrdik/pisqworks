@@ -64,10 +64,6 @@ class MainWindowController(
       }
     }
 
-    canvas.onRedraw = () => {
-      plan.occupied.foreach(v => canvas.drawMark(v._1, v._2.color))
-    }
-
     canvas.redraw()
   }
 

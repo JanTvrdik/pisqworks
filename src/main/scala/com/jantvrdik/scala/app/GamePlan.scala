@@ -17,9 +17,6 @@ class GamePlan(settings: GameSettings) {
   /** linear position => player */
   private val gameplan = ArrayBuffer.fill[Player](coefIn.last)(null)
 
-  /** list of occupied positions */
-  private var used = List[(GamePos, Player)]()
-
   private val neighborJumps = neighborDirections()
     .toVector
     .map(toLinearPos)
@@ -39,10 +36,6 @@ class GamePlan(settings: GameSettings) {
 
   def pointer(pos: GamePos) = {
     Pointer(toLinearPos(pos))
-  }
-
-  def occupied = {
-    used.toIterable
   }
 
   private def toLinearPos(pos: GamePos): Int = {
@@ -71,7 +64,6 @@ class GamePlan(settings: GameSettings) {
     }
 
     def mark_=(mark: Player) {
-      used = (pos, mark) :: used
       gameplan.update(linearPos, mark)
     }
 

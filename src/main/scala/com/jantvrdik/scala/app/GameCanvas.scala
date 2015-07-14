@@ -14,7 +14,6 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
   var onMousePressed: MouseListener = null
   var onMouseReleased: MouseListener = null
   var onMouseDragged: MouseListener = null
-  var onRedraw: () => Unit = null
 
   private val baseContext = baseCanvas.graphicsContext2D
   private val topContext = topCanvas.graphicsContext2D
@@ -24,6 +23,9 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
   private var size = 0.0
 
   private var lastPos: GamePos = null
+
+  /** list of placed marks */
+  private var marks = List.empty[Mark]
 
   val canvasSizeListener = (obs: Observable) => redraw()
   baseCanvas.width.addListener(canvasSizeListener)
@@ -48,16 +50,14 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
     baseContext.clearRect(0, 0, baseCanvas.width(), baseCanvas.height())
     size = initSize()
     drawGrids(GridPos(0, 0), settings.dim)
-    onRedraw()
+
+    marks.foreach(mark => drawMark(mark))
   }
 
   def drawMark(gamePos: GamePos, color: Color) {
-    val gridPos = toGridPos(gamePos)
-    val markSize = size / 2
-    val shift = size / 2 - markSize / 2
-
-    baseContext.setFill(color)
-    baseContext.fillOval(gridPos.x * size + shift, gridPos.y * size + shift, markSize, markSize)
+    val mark = Mark(toGridPos(gamePos), color)
+    drawMark(mark)
+    marks = mark :: marks
   }
 
   def drawNeighbours(neighbours: List[GamePos]) {
@@ -70,6 +70,13 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
       topContext.setStroke(Color.Brown)
       topContext.strokeOval(gridPos.x * size + shift, gridPos.y * size + shift, markSize, markSize)
     })
+  }
+
+  private def drawMark(mark: Mark) = {
+    val markSize = size / 2
+    val shift = size / 2 - markSize / 2
+    baseContext.setFill(mark.color)
+    baseContext.fillOval(mark.pos.x * size + shift, mark.pos.y * size + shift, markSize, markSize)
   }
 
   private def clear(canvas: Canvas) {
@@ -171,5 +178,7 @@ class GameCanvas(settings: GameSettings, baseCanvas: Canvas, topCanvas: Canvas) 
   }
 
   private case class GridPos(var x: Int, var y: Int)
+
+  private case class Mark(pos: GridPos, color: Color)
 
 }
