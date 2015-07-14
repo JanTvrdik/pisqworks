@@ -6,7 +6,6 @@ import org.junit.Test
 import scalafx.scene.paint.Color
 
 class GameModelTest {
-  var plan: GamePlan = _
   var model: GameModel = _
   var winningRow: Row = _
 
@@ -17,9 +16,7 @@ class GameModelTest {
     for (row <- rows) {
       val player = new Player(Color.Black)
       val settings: GameSettings = new GameSettings(Vector(3, 5, 7), 3, Vector(player))
-      plan = new GamePlan(settings)
-
-      model = new GameModel(settings, plan)
+      model = new GameModel(settings)
       model.onTurn = (player, pos) => Unit
       model.onVictory = (player, row) => winningRow = row
       winningRow = List.empty

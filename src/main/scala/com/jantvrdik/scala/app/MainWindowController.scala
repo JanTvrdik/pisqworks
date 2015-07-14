@@ -25,28 +25,20 @@ class MainWindowController(
   topCanvas.widthProperty().bind(parent.widthProperty())
   topCanvas.heightProperty().bind(parent.heightProperty())
 
+  val players = Vector(Player(Color.Red), Player(Color.Blue), Player(Color.Green), Player(Color.Black), Player(Color.Magenta))
+
   def handleStartButtonClick(event: ActionEvent) = {
-    val players = Vector(Player(Color.Red), Player(Color.Blue), Player(Color.Green), Player(Color.Black), Player(Color.Magenta))
-
-    // load values
-    val dim = getDimensions
-    val winLength = getWinLength(dim)
-    val playersCount = getPlayersCount(players)
-
-    // normalize value in inputs
-    dimensionsInput.text = dim.mkString(" * ")
-    winLengthInput.text = winLength.toString
-    playersCountInput.text = playersCount.toString
-
-    val settings = GameSettings(dim, winLength, players.take(playersCount))
-    val plan = new GamePlan(settings)
-    val model = new GameModel(settings, plan)
+    val settings = loadSettings
+    val model = new GameModel(settings)
     val canvas = new GameCanvas(settings, baseCanvas, topCanvas)
 
-    model.onVictory = (player, row) => row.foreach(pos => canvas.drawMark(pos, Color.Cyan))
     model.onTurn = (player, pos) => {
       canvas.drawMark(pos, player.color)
       showCurrentPlayer(model)
+    }
+
+    model.onVictory = (player, row) => {
+      row.foreach(pos => canvas.drawMark(pos, Color.Cyan))
     }
 
     canvas.onMousePressed = (event, pos) => {
@@ -73,7 +65,7 @@ class MainWindowController(
     topCanvas.requestFocus()
   }
 
-  private def getDimensions = {
+  private def loadDimensions = {
     try {
       var dim = dimensionsInput.text().split("\\*").map(_.trim.toInt).toVector
       if (dim.exists(_ <= 0)) throw new NumberFormatException
@@ -85,7 +77,7 @@ class MainWindowController(
     }
   }
 
-  private def getWinLength(dim: Dimensions) = {
+  private def loadWinLength(dim: Dimensions) = {
     try {
       Math.max(1, Math.min(dim.max, winLengthInput.text().toInt))
 
@@ -94,13 +86,25 @@ class MainWindowController(
     }
   }
 
-  private def getPlayersCount(players: Vector[Player]) = {
+  private def loadPlayersCount(players: Vector[Player]) = {
     try {
       Math.max(1, Math.min(players.length, playersCountInput.text().toInt))
 
     } catch {
       case _: NumberFormatException => Math.min(players.length, 3)
     }
+  }
+
+  private def loadSettings = {
+    val dim = loadDimensions
+    val winLength = loadWinLength(dim)
+    val playersCount = loadPlayersCount(players)
+
+    dimensionsInput.text = dim.mkString(" * ")
+    winLengthInput.text = winLength.toString
+    playersCountInput.text = playersCount.toString
+
+    GameSettings(dim, winLength, players.take(playersCount))
   }
 
   private def showCurrentPlayer(model: GameModel) {

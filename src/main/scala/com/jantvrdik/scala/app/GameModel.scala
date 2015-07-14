@@ -1,12 +1,15 @@
 package com.jantvrdik.scala.app
 
-class GameModel(settings: GameSettings, plan: GamePlan) {
+class GameModel(settings: GameSettings) {
 
   /** called when a player wins */
   var onVictory: (Player, Row) => Unit = null
 
   /** called on every successful turn */
   var onTurn: (Player, GamePos) => Unit = null
+
+  /** storage for marks */
+  private val plan = new GamePlan(settings)
 
   /** number of current turn */
   private var turn = 0
