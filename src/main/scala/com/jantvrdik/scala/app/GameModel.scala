@@ -9,24 +9,28 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
   private var currentPlayerId = 0
   private var finished = false
 
-  def select(pos: GamePos) = {
-    if (!finished && isPosValid(pos) && plan.getMark(pos) == null) {
-      plan.setMark(pos, currentPlayer)
-      onTurn(currentPlayer, pos)
-
-      val longest = findLongestRow(pos)
-      if (longest.length >= settings.winLength) {
-        onVictory(currentPlayer, longest)
-        finished = true
-      }
-
-      currentPlayerId = (currentPlayerId + 1) % settings.players.length
-      currentPlayer = settings.players(currentPlayerId)
-      true
-
-    } else {
-      false
+  def select(pos: GamePos): Boolean = {
+    if (finished || !isPosValid(pos)) {
+      return false
     }
+
+    val pointer = plan.pointer(pos)
+    if (!pointer.free) {
+      return false
+    }
+
+    pointer.mark = currentPlayer
+    onTurn(currentPlayer, pos)
+
+    val longest = longestRow(pos)
+    if (longest.length >= settings.winLength) {
+      finished = true
+      onVictory(currentPlayer, longest)
+    }
+
+    currentPlayerId = (currentPlayerId + 1) % settings.players.length
+    currentPlayer = settings.players(currentPlayerId)
+    true
   }
 
   def neighbors(pos: GamePos): List[GamePos] = {
@@ -56,42 +60,28 @@ class GameModel(settings: GameSettings, plan: GamePlan) {
     pos.forall(_ >= 0) && (pos, settings.dim).zipped.forall(_ < _)
   }
 
-  private def findLongestRow(start: GamePos): Row = {
-    findLongestRow(start, List.empty, positive = false)
+  private def longestRow(start: GamePos): Row = {
+    longestRow(plan.pointer(start)).map(_.pos)
   }
 
-  private def findLongestRow(start: GamePos, direction: Direction, positive: Boolean): Row = {
-    if (direction.length == settings.dim.length) {
-      if (positive) getSameInRow(plan.getMark(start), start, direction)
-      else List.empty
-
-    } else {
-      Vector(0, 1, -1)
-        .filter(positive || _ >= 0)
-        .map(i => findLongestRow(start, i :: direction, positive || i == 1))
-        .reduceLeft((x, y) => if (x.length > y.length) x else y)
-    }
+  private def longestRow(pointer: plan.Pointer): List[plan.Pointer] = {
+    val mark = pointer.mark
+    plan.directions.foldLeft(List.empty[plan.Pointer])((prev, dir) => {
+      val currentA = row(mark, pointer, -dir)
+      val currentB = row(mark, pointer.move(dir), dir)
+      if (currentA.length + currentB.length > prev.length) {
+        currentA ::: currentB
+      } else {
+        prev
+      }
+    })
   }
 
-  private def getSameInRow(mark: Player, start: GamePos, direction: Direction): Row = {
-    val direction2 = invertVector(direction)
-    val start2 = addVector(start, direction2)
-    getSameInRowOriented(mark, start, direction) ::: getSameInRowOriented(mark, start2, direction2)
-  }
-
-  private def getSameInRowOriented(mark: Player, start: GamePos, direction: Direction): Row = {
-    if (isPosValid(start) && mark == plan.getMark(start)) {
-      start :: getSameInRowOriented(mark, addVector(start, direction), direction)
-    } else {
+  private def row(mark: Player, pointer: plan.Pointer, direction: Int): List[plan.Pointer] = {
+    if (mark != pointer.mark) {
       List.empty
+    } else {
+      pointer :: row(mark, pointer.move(direction), direction)
     }
-  }
-
-  private def addVector(a: GamePos, b: Direction) = {
-    (a, b).zipped.map(_ + _)
-  }
-
-  private def invertVector(a: Direction): Direction = {
-    a.map(-_)
   }
 }
